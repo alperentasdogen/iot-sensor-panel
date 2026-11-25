@@ -24,3 +24,9 @@ def test_sensor_data_fields():
     }
 
     assert set(data.keys()) == expected_fields
+
+
+def test_sensor_data_uses_given_device_id():
+    data = generate_sensor_data("MOTOR-002")
+
+    assert data["device_id"] == "MOTOR-002"
