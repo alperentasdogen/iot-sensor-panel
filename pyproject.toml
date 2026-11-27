@@ -1,0 +1,26 @@
+[project]
+name = "iot-sensor-panel"
+version = "0.1.0"
+description = "Industrial IoT sensor monitoring: simulator -> MQTT -> SQLite -> FastAPI -> Streamlit"
+requires-python = ">=3.13"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# E/W: PEP 8 stil hataları, F: hatalar (kullanılmayan import vb.),
+# I: import sıralaması, B: olası bug kalıpları, UP: eski sözdizimi,
+# SIM: sadeleştirilebilecek kod
+select = ["E", "W", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+omit = ["tests/*", ".venv/*"]
+
+[tool.coverage.report]
+exclude_also = ["if __name__ == .__main__.:"]

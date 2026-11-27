@@ -27,11 +27,23 @@ Sıcaklık, nem, titreşim ve motor akımı gibi sensör verilerini simüle eder
 ## Tamamlanan Çalışmalar
 - Python geliştirme ortamı oluşturuldu.
 - Gerekli Python paketleri yüklendi.
-- Sensör simülatörü geliştirildi.
-- İki otomatik test başarıyla tamamlandı.
+- Sensör simülatörü geliştirildi (cihaz kimliği ayarlanabilir).
+- `.env` tabanlı, doğrulamalı ayar modülü eklendi (`config.py`).
+- Birden fazla cihaz için MQTT publisher geliştirildi (`simulator/publisher.py`).
+- MQTT subscriber geliştirildi: `factory/+/telemetry` dinlenir, gelen mesajlar doğrulanır ve SQLite'a kaydedilir (`collector/subscriber.py`, `storage/database.py`).
+- 56 otomatik test yazıldı; Mosquitto ile uçtan uca deneme yapıldı.
+
+## Çalıştırma
+```powershell
+copy .env.example .env
+mosquitto -p 1883
+python -m collector.subscriber
+python -m simulator.publisher
+```
+Her komut ayrı bir terminalde çalıştırılır. Ölçümler varsayılan olarak `data/sensors.db` dosyasına yazılır (`DATABASE_PATH` ile değiştirilebilir).
 
 ## Yapay Zeka Kullanımı
-Projenin geliştirilmesinde ChatGPT'den yazılım mimarisi, Python kodları, hata ayıklama ve test geliştirme konularında destek alınmaktadır.
+Projenin geliştirilmesinde Claude'dan yazılım mimarisi, Python kodları, hata ayıklama ve test geliştirme konularında destek alınmaktadır.
 
 AI tarafından önerilen kodlar çalıştırılarak test edilmektedir.
 
