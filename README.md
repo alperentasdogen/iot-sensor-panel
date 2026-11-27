@@ -43,7 +43,7 @@ python -m simulator.publisher
 Her komut ayrı bir terminalde çalıştırılır. Ölçümler varsayılan olarak `data/sensors.db` dosyasına yazılır (`DATABASE_PATH` ile değiştirilebilir).
 
 ## Yapay Zeka Kullanımı
-Projenin geliştirilmesinde ChatGPT'den yazılım mimarisi, Python kodları, hata ayıklama ve test geliştirme konularında destek alınmaktadır.
+Projenin geliştirilmesinde Claude'dan yazılım mimarisi, Python kodları, hata ayıklama ve test geliştirme konularında destek alınmaktadır.
 
 AI tarafından önerilen kodlar çalıştırılarak test edilmektedir.
 
