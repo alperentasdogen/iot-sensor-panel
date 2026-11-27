@@ -18,10 +18,16 @@ class Settings:
     mqtt_topic_prefix: str
     device_ids: tuple[str, ...]
     publish_interval_seconds: float
+    database_path: str
 
     def telemetry_topic(self, device_id: str) -> str:
         """Return the MQTT topic used for a device's sensor readings."""
         return f"{self.mqtt_topic_prefix}/{device_id.lower()}/telemetry"
+
+    @property
+    def telemetry_subscription(self) -> str:
+        """Return the MQTT topic filter that matches every device's telemetry topic."""
+        return f"{self.mqtt_topic_prefix}/+/telemetry"
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -41,6 +47,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         raise ValueError(f"PUBLISH_INTERVAL_SECONDS must be positive, got {interval}")
     if not device_ids:
         raise ValueError("DEVICE_IDS must contain at least one device id")
+    database_path = env.get("DATABASE_PATH", "data/sensors.db").strip()
+    if not database_path:
+        raise ValueError("DATABASE_PATH must not be empty")
 
     return Settings(
         mqtt_host=env.get("MQTT_HOST", "localhost"),
@@ -50,4 +59,5 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         mqtt_topic_prefix=env.get("MQTT_TOPIC_PREFIX", "factory"),
         device_ids=device_ids,
         publish_interval_seconds=interval,
+        database_path=database_path,
     )

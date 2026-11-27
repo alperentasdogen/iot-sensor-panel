@@ -104,3 +104,19 @@ def test_reads_os_environ_when_no_mapping_is_given(monkeypatch):
     assert settings.mqtt_topic_prefix == "env-prefix"
     assert settings.device_ids == ("MOTOR-009",)
     assert settings.publish_interval_seconds == 1.0
+
+
+def test_database_path_defaults_and_can_be_overridden():
+    assert load_settings({}).database_path == "data/sensors.db"
+    assert load_settings({"DATABASE_PATH": "tmp/x.db"}).database_path == "tmp/x.db"
+
+
+def test_empty_database_path_raises():
+    with pytest.raises(ValueError, match="DATABASE_PATH"):
+        load_settings({"DATABASE_PATH": "  "})
+
+
+def test_telemetry_subscription_matches_every_device():
+    settings = load_settings({"MQTT_TOPIC_PREFIX": "plant1"})
+
+    assert settings.telemetry_subscription == "plant1/+/telemetry"
