@@ -13,7 +13,7 @@ flowchart LR
     SIM["Sensör simülatörü<br/>simulator/publisher.py"] -- "MQTT publish<br/>factory/&lt;cihaz&gt;/telemetry" --> BRK[("Mosquitto<br/>MQTT broker")]
     BRK -- "MQTT subscribe<br/>factory/+/telemetry" --> SUB["Subscriber<br/>collector/subscriber.py"]
     SUB -- "doğrula + kaydet" --> DB[("SQLite<br/>data/sensors.db")]
-    DB -- "okuma" --> API["REST API<br/>FastAPI (planlandı)"]
+    DB -- "okuma" --> API["REST API<br/>api/app.py"]
     API -- "HTTP / JSON" --> UI["Dashboard<br/>Streamlit + Plotly (planlandı)"]
 ```
 
@@ -25,7 +25,7 @@ flowchart LR
 | Broker | Mosquitto (Windows servisi) | Mesajları publisher'dan subscriber'a iletir | Kurulu |
 | Subscriber | `collector/subscriber.py` | Mesajları dinler, doğrular, veritabanına yazar | Tamamlandı |
 | Depolama | `storage/database.py` | Tablo şeması, kayıt ekleme ve sorgulama | Tamamlandı |
-| REST API | `api/` | Veritabanındaki ölçümleri HTTP üzerinden sunar | Planlandı (PR #3) |
+| REST API | `api/` | Veritabanındaki ölçümleri HTTP üzerinden sunar | Tamamlandı |
 | Dashboard | `dashboard/` | Canlı grafikler, cihaz seçici, alarm eşikleri | Planlandı (PR #4) |
 
 ## Veri Akışı
@@ -34,7 +34,29 @@ flowchart LR
 2. Ölçüm JSON olarak `<MQTT_TOPIC_PREFIX>/<cihaz-kimliği-küçük-harf>/telemetry` topic'ine QoS 1 ile gönderilir.
 3. Subscriber `<MQTT_TOPIC_PREFIX>/+/telemetry` filtresine abonedir; `+` tek seviyeli joker karakter olduğu için bütün cihazları tek abonelikle alır.
 4. Gelen her mesaj doğrulanır. Geçersiz mesaj loglanıp atlanır, geçerli mesaj `readings` tablosuna yazılır.
-5. API ve dashboard yalnızca veritabanını okur; MQTT'ye bağlanmazlar.
+5. API veritabanını yalnızca okur; MQTT'ye bağlanmaz. Dashboard verilere API üzerinden erişir.
+
+## REST API
+
+`python -m api.main` ile `http://127.0.0.1:8000` adresinde çalışır. Bütün endpoint'ler salt okunurdur
+ve JSON döndürür. Etkileşimli belge `http://127.0.0.1:8000/docs` adresindedir.
+
+| Endpoint | Parametreler | Döndürdüğü |
+|---|---|---|
+| `GET /health` | – | API ve veritabanının durumu |
+| `GET /devices` | – | Ölçüm gönderen cihazlar, ölçüm sayısı, ilk ve son ölçüm zamanı |
+| `GET /readings/latest` | – | Her cihazın en son ölçümü |
+| `GET /readings` | `device_id`, `since`, `until`, `limit` (1–1000, varsayılan 100) | Ölçümler, en yeniden eskiye |
+| `GET /stats` | `device_id`, `since`, `until` | Cihaz başına ölçüm sayısı ve her ölçümün min / ortalama / maks değeri |
+
+Girdi doğrulama (hatalı istek `422` alır):
+
+- `device_id` yalnızca harf, rakam, `-` ve `_` içerebilir; en fazla 64 karakterdir.
+- `since` ve `until` saat dilimi içermelidir (`2026-11-28T10:00:00Z` veya `...+03:00`); `since`, `until`'den sonra olamaz.
+- Saat dilimleri UTC'ye çevrilerek karşılaştırılır; aralık iki uçta da dahildir.
+
+Veritabanı açılamazsa API `503 Database unavailable` döndürür; iç hata ayrıntıları istemciye gösterilmez,
+yalnızca sunucu loguna yazılır.
 
 ## Mesaj Biçimi
 
@@ -96,6 +118,10 @@ CREATE INDEX idx_readings_device_time ON readings (device_id, timestamp);
 | Subscriber'ın veritabanına yazan tek bileşen olması | Yazma işlemi tek yerde toplanır; API ve dashboard yalnızca okur. |
 | Abonelik `on_connect` içinde yapılır | Bağlantı koparsa paho yeniden bağlandığında abonelik de yeniden kurulur. |
 | İstemci kimliği (`client_id`) parametre olarak verilebilir | Broker aynı kimlikle bağlanan ikinci istemcide ilkini düşürür; testler ve birden çok örnek ayrı kimlik kullanır. |
+| SQL metinleri sabit; isteğe bağlı filtreler `(:değer IS NULL OR sütun = :değer)` ile yazılır | Kullanıcı girdisi SQLite'a yalnızca parametre olarak ulaşır; çalışma anında SQL üretilmez, SQL injection mümkün değildir. |
+| SQL sorguları yalnızca `storage/database.py` içinde | API katmanı HTTP ile (doğrulama, yanıt biçimi) ilgilenir; sorgular HTTP'den bağımsız test edilir. |
+| API'de istek başına bir veritabanı bağlantısı | Bağlantı istekler arasında paylaşılmaz. FastAPI senkron fonksiyonları farklı thread'lerde çalıştırabildiği için bağlantı `check_same_thread=False` ile açılır. |
+| API yalnızca `127.0.0.1` adresini dinler | Broker ile aynı ilke: sistem yalnızca yerel makineden erişilebilir. |
 | Ayarlar `.env` dosyasından okunur | Ortama özgü değerler koddan ayrılır; `.env` repoya girmez, örneği `.env.example` dosyasındadır. |
 | Broker'da kimlik doğrulama yok | Mosquitto 2.x varsayılan olarak yalnızca `127.0.0.1` ve `::1` adreslerini dinler; ağdan erişilemez. Kod `MQTT_USERNAME` / `MQTT_PASSWORD` ile kimlik doğrulamaya hazırdır. |
 
@@ -104,4 +130,5 @@ CREATE INDEX idx_readings_device_time ON readings (device_id, timestamp);
 | Tür | Dosyalar | Kapsam |
 |---|---|---|
 | Birim | `tests/test_config.py`, `test_sensor.py`, `test_publisher.py`, `test_subscriber.py`, `test_database.py` | Broker gerektirmez; MQTT istemcisi yerine sahte nesneler kullanılır. |
+| API | `tests/test_api.py` | FastAPI `TestClient` ile gerçek HTTP istekleri; geçici bir veritabanı kullanılır. Başarılı yanıtlar, `422` ve `503` durumları test edilir. |
 | Entegrasyon | `tests/test_mqtt_integration.py` | Gerçek zinciri çalıştırır: publisher → Mosquitto → subscriber → SQLite. Broker yoksa otomatik atlanır. |

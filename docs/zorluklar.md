@@ -69,3 +69,23 @@ ilgili commit ile birlikte verilmiştir.
 - **Karar:** Broker yalnızca yerel makineden erişilebilir olduğu için parola eklenmedi. Kod
   `MQTT_USERNAME` / `MQTT_PASSWORD` ayarlarıyla kimlik doğrulamaya hazırdır; broker ağa
   açılırsa yalnızca `.env` doldurulur.
+
+## 7. FastAPI'nin thread'leri ile SQLite bağlantısı
+
+- **Sorun:** FastAPI senkron endpoint'leri ve bağımlılıkları (dependency) bir thread havuzunda
+  çalıştırır; bağlantıyı açan bağımlılık ile onu kullanan endpoint farklı thread'lerde
+  çalışabilir. `sqlite3`'ün varsayılan kuralı (madde 3) bu durumda hata verir.
+- **Çözüm:** Her istek kendi bağlantısını açar ve istek bitince kapatır. Bağlantı
+  `check_same_thread=False` ile açılır; istekler arasında paylaşılmadığı için hiçbir zaman iki
+  thread aynı anda kullanmaz. Bu ayarın neyi değiştirdiği ayrı bir testle gösterilmiştir.
+- **Commit:** `edc136b feat: add device, time range and statistics queries to storage`
+
+## 8. Yalnızca gerçek veriyle görülen ortalama gürültüsü
+
+- **Sorun:** Testlerdeki "yuvarlak" değerlerde sorun yoktu, ancak gerçek simülatör verisiyle
+  yapılan denemede `/stats` ortalamaları `4.546250000000001` gibi kayan nokta gürültüsü
+  içeriyordu.
+- **Çözüm:** Ölçümler zaten iki ondalıklı olduğu için ortalamalar SQL'de `ROUND(AVG(...), 2)`
+  ile yuvarlandı ve bunu koruyan bir test eklendi. Bu durum, testlere ek olarak gerçek
+  ortamda uçtan uca deneme yapmanın neden gerekli olduğunu gösterdi.
+- **Commit:** `3647d3c fix: round statistics averages to two decimals`

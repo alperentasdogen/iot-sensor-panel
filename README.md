@@ -31,7 +31,9 @@ Sıcaklık, nem, titreşim ve motor akımı gibi sensör verilerini simüle eder
 - `.env` tabanlı, doğrulamalı ayar modülü eklendi (`config.py`).
 - Birden fazla cihaz için MQTT publisher geliştirildi (`simulator/publisher.py`).
 - MQTT subscriber geliştirildi: `factory/+/telemetry` dinlenir, gelen mesajlar doğrulanır ve SQLite'a kaydedilir (`collector/subscriber.py`, `storage/database.py`).
-- 56 otomatik test yazıldı; Mosquitto ile uçtan uca deneme yapıldı.
+- Salt okunur REST API geliştirildi: `/health`, `/devices`, `/readings/latest`, `/readings`, `/stats` (`api/`).
+- 96 otomatik test yazıldı (birim, API ve MQTT entegrasyon testleri); GitHub Actions her PR'da lint, format ve testleri çalıştırır.
+- Mimari, karşılaşılan zorluklar ve yapay zeka kullanımı `docs/` klasöründe belgelendi.
 
 ## Çalıştırma
 Mosquitto, Windows kurulumunda servis olarak 1883 portunda otomatik çalışır; ayrıca başlatılmasına gerek yoktur. Servisin durumunu kontrol etmek için:
@@ -50,6 +52,12 @@ python -m collector.subscriber
 python -m simulator.publisher
 ```
 Ölçümler varsayılan olarak `data/sensors.db` dosyasına yazılır (`DATABASE_PATH` ile değiştirilebilir).
+
+REST API'yi üçüncü bir terminalde başlatın:
+```powershell
+python -m api.main
+```
+API yalnızca bu bilgisayardan erişilebilir: `http://127.0.0.1:8000`. Etkileşimli belge ve deneme sayfası: `http://127.0.0.1:8000/docs`. Endpoint'lerin listesi `docs/mimari.md` içindedir.
 
 ## Yapay Zeka Kullanımı
 Projenin geliştirilmesinde Claude'dan yazılım mimarisi, Python kodları, hata ayıklama ve test geliştirme konularında destek alınmaktadır.
