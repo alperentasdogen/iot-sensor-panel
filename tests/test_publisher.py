@@ -5,6 +5,7 @@ import paho.mqtt.client as mqtt
 
 from config import load_settings
 from simulator.publisher import (
+    DEFAULT_CLIENT_ID,
     QOS_AT_LEAST_ONCE,
     build_payload,
     create_client,
@@ -108,3 +109,15 @@ def test_create_client_sets_credentials_when_username_is_given():
     client = create_client(settings)
 
     assert client.username == "panel"
+
+
+def test_create_client_uses_default_client_id(client_kwargs):
+    create_client(load_settings({}))
+
+    assert client_kwargs[-1]["client_id"] == DEFAULT_CLIENT_ID
+
+
+def test_create_client_accepts_custom_client_id(client_kwargs):
+    create_client(load_settings({}), client_id="publisher-2")
+
+    assert client_kwargs[-1]["client_id"] == "publisher-2"

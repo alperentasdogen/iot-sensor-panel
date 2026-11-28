@@ -17,6 +17,9 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra"
+markers = [
+    "integration: needs a running MQTT broker; skipped automatically when none is reachable",
+]
 
 [tool.coverage.run]
 branch = true
@@ -24,3 +27,4 @@ omit = ["tests/*", ".venv/*"]
 
 [tool.coverage.report]
 exclude_also = ["if __name__ == .__main__.:"]
+fail_under = 80
