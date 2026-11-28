@@ -17,6 +17,9 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra"
+markers = [
+    "integration: needs a running MQTT broker; skipped automatically when none is reachable",
+]
 
 [tool.coverage.run]
 branch = true
