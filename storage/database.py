@@ -60,16 +60,16 @@ SELECT_STATS = """
 SELECT device_id,
        COUNT(*)         AS reading_count,
        MIN(temperature) AS temperature_min,
-       AVG(temperature) AS temperature_avg,
+       ROUND(AVG(temperature), 2) AS temperature_avg,
        MAX(temperature) AS temperature_max,
        MIN(humidity)    AS humidity_min,
-       AVG(humidity)    AS humidity_avg,
+       ROUND(AVG(humidity), 2)    AS humidity_avg,
        MAX(humidity)    AS humidity_max,
        MIN(vibration)   AS vibration_min,
-       AVG(vibration)   AS vibration_avg,
+       ROUND(AVG(vibration), 2)   AS vibration_avg,
        MAX(vibration)   AS vibration_max,
        MIN(current)     AS current_min,
-       AVG(current)     AS current_avg,
+       ROUND(AVG(current), 2)     AS current_avg,
        MAX(current)     AS current_max
 FROM readings
 WHERE (:device_id IS NULL OR device_id = :device_id)

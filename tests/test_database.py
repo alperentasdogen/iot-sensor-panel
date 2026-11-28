@@ -209,3 +209,12 @@ def test_connection_can_be_shared_with_another_thread_when_allowed(tmp_path):
     shared.close()
 
     assert set(errors) == {"strict"}
+
+
+def test_reading_stats_rounds_averages_to_two_decimals(conn):
+    for temperature in (10.0, 10.0, 10.01):
+        insert_reading(conn, make_reading(temperature=temperature))
+
+    [stats] = reading_stats(conn)
+
+    assert stats["temperature_avg"] == 10.0
