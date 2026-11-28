@@ -13,6 +13,7 @@ from simulator.sensor import generate_sensor_data
 logger = logging.getLogger(__name__)
 
 QOS_AT_LEAST_ONCE = 1
+DEFAULT_CLIENT_ID = "sensor-publisher"
 
 
 def build_payload(device_id: str) -> str:
@@ -31,11 +32,15 @@ def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
     logger.info("Disconnected from broker: %s", reason_code)
 
 
-def create_client(settings: Settings) -> mqtt.Client:
-    """Create an MQTT client configured from the settings."""
+def create_client(settings: Settings, client_id: str = DEFAULT_CLIENT_ID) -> mqtt.Client:
+    """Create an MQTT client configured from the settings.
+
+    The broker drops an existing connection when another client connects with the
+    same id, so each running instance needs its own client_id.
+    """
     client = mqtt.Client(
         callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-        client_id="sensor-publisher",
+        client_id=client_id,
     )
     if settings.mqtt_username:
         client.username_pw_set(settings.mqtt_username, settings.mqtt_password)

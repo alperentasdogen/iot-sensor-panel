@@ -5,6 +5,7 @@ import sqlite3
 import pytest
 
 from collector.subscriber import (
+    DEFAULT_CLIENT_ID,
     QOS_AT_LEAST_ONCE,
     SubscriberContext,
     create_client,
@@ -170,3 +171,15 @@ def test_create_client_registers_callbacks_and_credentials(context):
     assert client.on_connect is on_connect
     assert client.username == "panel"
     assert client.user_data_get().conn is context.conn
+
+
+def test_create_client_uses_default_client_id(context, client_kwargs):
+    create_client(context.settings, context.conn)
+
+    assert client_kwargs[-1]["client_id"] == DEFAULT_CLIENT_ID
+
+
+def test_create_client_accepts_custom_client_id(context, client_kwargs):
+    create_client(context.settings, context.conn, client_id="subscriber-2")
+
+    assert client_kwargs[-1]["client_id"] == "subscriber-2"

@@ -15,6 +15,8 @@ from storage.database import MEASUREMENT_FIELDS, connect, insert_reading
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_CLIENT_ID = "sensor-subscriber"
+
 QOS_AT_LEAST_ONCE = 1
 
 
@@ -100,11 +102,17 @@ def on_message(client, userdata: SubscriberContext, message):
     logger.info("Stored reading from %s", reading["device_id"])
 
 
-def create_client(settings: Settings, conn: sqlite3.Connection) -> mqtt.Client:
-    """Create an MQTT client that stores incoming readings through conn."""
+def create_client(
+    settings: Settings, conn: sqlite3.Connection, client_id: str = DEFAULT_CLIENT_ID
+) -> mqtt.Client:
+    """Create an MQTT client that stores incoming readings through conn.
+
+    The broker drops an existing connection when another client connects with the
+    same id, so each running instance needs its own client_id.
+    """
     client = mqtt.Client(
         callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-        client_id="sensor-subscriber",
+        client_id=client_id,
         userdata=SubscriberContext(settings=settings, conn=conn),
     )
     if settings.mqtt_username:
