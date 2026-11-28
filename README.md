@@ -34,13 +34,22 @@ Sıcaklık, nem, titreşim ve motor akımı gibi sensör verilerini simüle eder
 - 56 otomatik test yazıldı; Mosquitto ile uçtan uca deneme yapıldı.
 
 ## Çalıştırma
+Mosquitto, Windows kurulumunda servis olarak 1883 portunda otomatik çalışır; ayrıca başlatılmasına gerek yoktur. Servisin durumunu kontrol etmek için:
+```powershell
+Get-Service mosquitto
+```
+Ayar dosyasını oluşturun:
 ```powershell
 copy .env.example .env
-mosquitto -p 1883
+```
+Ardından subscriber ve publisher'ı iki ayrı terminalde çalıştırın:
+```powershell
 python -m collector.subscriber
+```
+```powershell
 python -m simulator.publisher
 ```
-Her komut ayrı bir terminalde çalıştırılır. Ölçümler varsayılan olarak `data/sensors.db` dosyasına yazılır (`DATABASE_PATH` ile değiştirilebilir).
+Ölçümler varsayılan olarak `data/sensors.db` dosyasına yazılır (`DATABASE_PATH` ile değiştirilebilir).
 
 ## Yapay Zeka Kullanımı
 Projenin geliştirilmesinde Claude'dan yazılım mimarisi, Python kodları, hata ayıklama ve test geliştirme konularında destek alınmaktadır.
